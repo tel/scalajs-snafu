@@ -9,28 +9,39 @@ scalaVersion := "2.11.7"
 
 skip in packageJSDependencies := false
 
-libraryDependencies ++= Seq(
+libraryDependencies ++= {
+  val ScalaJsReactVersion = "0.10.4"
+  val ScalaCssVersion     = "0.4.0"
 
-  "org.scalaz"                        %%  "scalaz-core" % "7.2.1",
-  "com.github.japgolly.scalajs-react" %%% "core"        % "0.10.4"
+  Seq(
+    "org.scalaz"                        %%  "scalaz-core" % "7.2.1",
+    "com.github.japgolly.scalajs-react" %%% "core"        % ScalaJsReactVersion,
+    "com.github.japgolly.scalajs-react" %%% "extra"       % ScalaJsReactVersion,
+    "com.github.japgolly.scalacss"      %%% "core"        % ScalaCssVersion,
+    "com.github.japgolly.scalacss"      %%% "ext-react"   % ScalaCssVersion
 
-)
+
+  )
+}
 
 
-jsDependencies ++= Seq(
+jsDependencies ++= {
+  val ReactVersion = "0.14.3"
 
-  "org.webjars.bower" % "react" % "0.14.3"
-    /        "react-with-addons.js"
-    minified "react-with-addons.min.js"
-    commonJSName "React",
+  Seq(
+    "org.webjars.bower" % "react" % ReactVersion
+      /        "react-with-addons.js"
+      minified "react-with-addons.min.js"
+      commonJSName "React",
 
-  "org.webjars.bower" % "react" % "0.14.3"
-    /         "react-dom.js"
-    minified  "react-dom.min.js"
-    dependsOn "react-with-addons.js"
-    commonJSName "ReactDOM"
+    "org.webjars.bower" % "react" % ReactVersion
+      /         "react-dom.js"
+      minified  "react-dom.min.js"
+      dependsOn "react-with-addons.js"
+      commonJSName "ReactDOM"
 
-)
+  )
+}
 
 scalacOptions ++= Seq("-feature")
 

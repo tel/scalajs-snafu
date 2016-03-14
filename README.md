@@ -3,7 +3,21 @@
 
 Snafu is a small application exploring a SVG-based diagramming designs.
 
-# References
+## Getting started
+
+Snafu works using [Li Haoyi's Workbench](https://github.com/lihaoyi/workbench) 
+for snappy hot-reload cylces. If you have `sbt` installed then
+
+```
+sbt ~fastOptJS
+```
+
+will compile the sources and spin up a development server. From here 
+visit `http://localhost:12345/target/scala-2.11/classes/index-dev.html` 
+to see Snafu. This page will auto-reload as soon as any Snafu source is 
+changed.
+
+## References
 
 - [Daniel James's *Scala's Modular Roots*](https://io.pellucid.com/blog/scalas-modular-roots) 
   describes a means for achieve ML-like modularity in Scala. Signatures,
