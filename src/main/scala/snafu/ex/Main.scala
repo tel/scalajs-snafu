@@ -2,11 +2,12 @@ package snafu.ex
 
 import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom
-import snafu.ex.RouterConfig.Location
-import scalacss.ScalaCssReact._
-import scalacss.Defaults._
+import org.scalajs.dom.Element
 
 import scala.scalajs.js.JSApp
+import scalacss.Defaults._
+import scalacss.ScalaCssReact._
+import scalacss.mutable.GlobalRegistry
 
 object Main extends JSApp {
   def main() {
@@ -16,12 +17,13 @@ object Main extends JSApp {
         / "target" / "scala-2.11" / "classes" / "index-dev.html"
         )
 
-    val router: Router[Location] = Router(baseUrl, RouterConfig().logToConsole)
+    val router = Router(baseUrl, RouterConfig().logToConsole)
 
     // Injects the stylesheet
-    Styles.addToDocument()
-    Styles.applyToSelectorAll("body", Styles.body)
+    GlobalRegistry.addToDocumentOnRegistration()
+    GlobalRegistry.register(Styles)
 
-    router() render dom.document.querySelector("#app")
+    val appRoot: Element = dom.document.querySelector("#app")
+    router() render appRoot
   }
 }

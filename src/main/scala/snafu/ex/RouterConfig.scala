@@ -1,17 +1,13 @@
 package snafu.ex
 
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.extra.Reusability
 import japgolly.scalajs.react.extra.router._
-import japgolly.scalajs.react.vdom.prefix_<^._
+import snafu.ex.eg.Drawing1
 
 object RouterConfig {
 
-  sealed trait Location
-  case object Home extends Location
-
   def apply() =
     RouterConfigDsl[Location].buildConfig { dsl =>
+      import Layout.layout
       import dsl._
 
       val core: Rule =
@@ -22,27 +18,7 @@ object RouterConfig {
       core
         .notFound(redirectToPage(Home)(Redirect.Replace))
         .renderWith(layout)
-        .verify(Home)
+        .verify(Home, Eg(Drawing1))
     }
 
-  def layout(c: RouterCtl[Location], r: Resolution[Location]) =
-    <.div(
-      navMenu(c),
-      <.div(^.cls := "container", r.render()))
-
-  val navMenu = ReactComponentB[RouterCtl[Location]]("Menu")
-    .render_P { ctl =>
-      def nav(name: String, target: Location) =
-        <.li(
-          ^.cls := "navbar-brand active",
-          ctl setOnClick target,
-          name)
-      <.div(
-        ^.cls := "navbar navbar-default",
-        <.ul(
-          ^.cls := "navbar-header",
-          nav("Home", Home)))
-    }
-    .configure(Reusability.shouldComponentUpdate)
-    .build
 }
