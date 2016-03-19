@@ -35,7 +35,8 @@ object RoutingPrism {
 
         // We can't write this as an locally bound function because of
         // something about not being able to pass a function in with a
-        // "dependent" (path-dependent) type
+        // "dependent" (path-dependent) type. We also can't use
+        // for-comprehension syntax because the inferencer breaks hard. :(
         parses = (loc: Location) =>
           ra.parses(loc) match {
             case Left(err) => Left(err)
@@ -47,7 +48,8 @@ object RoutingPrism {
               }
           },
 
-        // We do it here too just for parallelism
+        // We define things locally here as well just for parallelism with
+        // `parses`.
         prints = (x: c.C) => rb.prints(c._2(x)) andThen ra.prints(c._1(x))
       )
     }
