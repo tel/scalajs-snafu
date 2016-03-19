@@ -1,5 +1,7 @@
 package tel.fiftythree
 
+import tel.fiftythree.Tuples.Composition
+
 import scala.language.higherKinds
 import scala.util.matching.Regex
 
@@ -9,34 +11,8 @@ trait Routes[Router[_]] {
 
 object Routes {
 
-  /**
-    * A Representation is essentially `(String => Either[Error, A], A => String)`
-    * such that parse is a retract of print, e.g. `parse(print(x)) = x`.
-    */
-  trait Representation[A] {
-    def parse(repr: String): Either[String, A]
-    def print(value: A): String
-  }
-
-  object Representation {
-    import scala.util.control.Exception._
-
-    implicit val stringHasLiteralRepresentation = new Representation[String] {
-      def parse(repr: String) = Right(repr)
-      def print(value: String) = value
-    }
-
-    implicit val intHasRepresentation = new Representation[Int] {
-      def parse(repr: String): Either[String, Int] = {
-        val catcher: Catch[Int] = catching(classOf[NumberFormatException])
-        val almost: Either[Throwable, Int] = catcher either Integer.valueOf(repr)
-        almost.left.map(_.toString())
-      }
-      def print(value: Int): String = value.toString()
-    }
-  }
-
   trait DSL[Router[_]] {
+
     /** Matches an exact string */
     def literal(repr: String): Router[Unit] =
       core.map[String, Unit](_ => (), _ => repr)(regex(repr.r))
@@ -45,16 +21,28 @@ object Routes {
     def regex(pattern: Regex): Router[String]
 
     /**
+      * Convenient interface for `represented` where we use an implicit
+      * `Representation` value. Same as `represented[A](implicitly)`.
+      */
+    def some[A: Representation]: Router[A] = represented(implicitly)
+
+    /**
       * Provided a `Representation` of some type as a String, we check to see
       * if the next segment of the path matches.
       */
-    def repr[A: Representation]: Router[A]
+    def represented[A](repr: Representation[A]): Router[A]
 
     /** Matches any non-empty string */
-    def string: Router[String] = repr
+    def string: Router[String] = some
 
     /** Core semantic combinators */
     val core: Core[Router]
+
+    implicit class DslInfixOperations[A](ra: Router[A]) {
+      def ~[B](rb: Router[B])(implicit c: Composition[A, B]) =
+        core.pairFlat(ra, rb)(c)
+    }
+
   }
 
   /**
@@ -71,5 +59,27 @@ object Routes {
       * a Router producing one type to a different router.
       */
     def map[A, B](f: A => B, g: B => A)(r: Router[A]): Router[B]
+
+    /**
+      * Inject a value into a router without examining or consuming the
+      * location.
+      */
+    def unit[A](a: A): Router[A]
+
+    /**
+      * Execute two parses sequentially and return both results. Unlike
+      * `pair`, `pairFlat` uses an implicit `Composition` to try to smash
+      * tuples together "flatly".
+      */
+    def pairFlat[A, B](ra: Router[A], rb: Router[B])(implicit c: Composition[A, B]): Router[c.C] =
+      map[(A, B), c.C](x => c.smash(x._1, x._2), x => (c._1(x), c._2(x)))(pair(ra, rb))
+
+    /**
+      * Execute two parses sequentially and return both results as a tuple.
+      * Unlike `pairFlat` this does not do any extra work to try to flatten
+      * tuples. Can be considered a type-specialized version of `pairFlat`.
+      */
+    def pair[A, B](ra: Router[A], rb: Router[B]): Router[(A, B)] = pairFlat(ra, rb)
+
   }
 }

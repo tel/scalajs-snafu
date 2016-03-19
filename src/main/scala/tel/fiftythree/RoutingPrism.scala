@@ -1,8 +1,7 @@
 package tel.fiftythree
 
-import tel.fiftythree.Routes.{Representation, Core}
-
 import scala.util.matching.Regex
+import tel.fiftythree.Tuples.Composition
 
 final case class
   RoutingPrism[A](val parses: Location => Either[RoutingError, (A, Location)],
@@ -19,6 +18,37 @@ object RoutingPrism {
           case Right((value, newLoc)) => Right((f(value), newLoc))
         },
         prints = (b: B) => r.prints(g(b))
+      )
+    }
+
+    def unit[A](a: A): RoutingPrism[A] =
+      RoutingPrism(
+        parses = (loc: Location) => Right((a, loc)),
+        prints = (_: A) => identity[Location]
+      )
+
+    override def pairFlat[A, B]
+      (ra: RoutingPrism[A], rb: RoutingPrism[B])
+      (implicit c: Composition[A, B]): RoutingPrism[c.C] = {
+
+      RoutingPrism(
+
+        // We can't write this as an locally bound function because of
+        // something about not being able to pass a function in with a
+        // "dependent" (path-dependent) type
+        parses = (loc: Location) =>
+          ra.parses(loc) match {
+            case Left(err) => Left(err)
+            case Right((a, newLoc)) =>
+              rb.parses(newLoc) match {
+                case Left(err) => Left(err)
+                case Right((b, newNewLoc)) =>
+                  Right((c.smash(a, b), newNewLoc))
+              }
+          },
+
+        // We do it here too just for parallelism
+        prints = (x: c.C) => rb.prints(c._2(x)) andThen ra.prints(c._1(x))
       )
     }
   }
@@ -77,11 +107,9 @@ object RoutingPrism {
       )
     }
 
-    val core: Core[RoutingPrism] = Core
+    val core: Routes.Core[RoutingPrism] = Core
 
-    def repr[A: Representation]: RoutingPrism[A] = {
-
-      val rep = implicitly[Representation[A]]
+    def represented[A](rep: Representation[A]): RoutingPrism[A] = {
 
       def parsesRepr(loc: Location): Either[RoutingError, (A, Location)] =
         loc.uncons match {
@@ -102,5 +130,6 @@ object RoutingPrism {
       )
     }
   }
+
 }
 
