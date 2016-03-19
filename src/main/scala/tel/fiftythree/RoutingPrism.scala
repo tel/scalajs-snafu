@@ -37,6 +37,10 @@ object RoutingPrism {
         // something about not being able to pass a function in with a
         // "dependent" (path-dependent) type. We also can't use
         // for-comprehension syntax because the inferencer breaks hard. :(
+        //
+        // Also this is a really nice monad transformer situation. So maybe
+        // things would work better if we just implemented a new type with
+        // its own `flatMap` implementation.
         parses = (loc: Location) =>
           ra.parses(loc) match {
             case Left(err) => Left(err)
