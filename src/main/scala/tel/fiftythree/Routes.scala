@@ -5,10 +5,6 @@ import tel.fiftythree.Tuples.Composition
 import scala.language.higherKinds
 import scala.util.matching.Regex
 
-trait Routes[Router[_]] {
-
-}
-
 object Routes {
 
   trait DSL[Router[_]] {
